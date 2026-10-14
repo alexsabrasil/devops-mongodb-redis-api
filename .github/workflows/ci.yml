@@ -1,0 +1,46 @@
+
+name: CI - Desafio 2
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Testes Node.js, MongoDB e Redis
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout do codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Verificar vulnerabilidades
+        run: npm audit --audit-level=high
+
+      - name: Executar testes automatizados
+        env:
+          MONGO_URL: mongodb://127.0.0.1:27017/desafio-2-test
+          REDIS_URL: redis://127.0.0.1:6379
+          PORT: '3001'
+        run: npm test
